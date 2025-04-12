@@ -164,6 +164,82 @@ Content-Type: application/json
 }
 ```
 
+#### 3.3 修改用户密码
+
+##### 请求URL
+
+```http
+PUT /api/users/change-password
+```
+
+##### 请求头
+
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+##### 请求参数
+
+```json
+{
+  "oldPassword": "OldPass@123",
+  "newPassword": "NewPass@123",
+  "confirmPassword": "NewPass@123"
+}
+```
+
+##### 响应示例
+
+```json
+{
+  "code": 200,
+  "message": "密码修改成功"
+}
+```
+
+#### 3.4 超管重置管理员密码（仅超级管理员可用）
+
+##### 请求URL
+
+```http
+PUT /api/users/admin/:id/reset-password
+```
+
+##### 请求头
+
+```
+Authorization: Bearer <superadmin_token>
+Content-Type: application/json
+```
+
+##### 请求参数
+
+```json
+{
+  "newPassword": "NewPass@123",
+  "confirmPassword": "NewPass@123"
+}
+```
+
+##### 响应示例
+
+```json
+{
+  "code": 200,
+  "message": "管理员密码重置成功"
+}
+```
+
+##### 错误响应
+
+```json
+{
+  "code": 403,
+  "message": "没有权限执行此操作"
+}
+```
+
 #### 4. 用户管理（管理员专用）
 ##### 4.1 用户列表查询
 ```http
