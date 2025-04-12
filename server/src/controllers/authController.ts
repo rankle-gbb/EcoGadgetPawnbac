@@ -8,7 +8,7 @@ export class AuthController {
    */
   static async refreshToken(ctx: Context): Promise<void> {
     try {
-      const oldToken = ctx.request.body.token || ctx.headers.authorization?.split(' ')[1];
+      const oldToken = (ctx.request.body as { token?: string }).token || ctx.headers.authorization?.split(' ')[1];
       
       if (!oldToken) {
         throw new AppError('需要提供token', 400);

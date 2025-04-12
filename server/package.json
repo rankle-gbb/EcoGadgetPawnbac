@@ -11,6 +11,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc",
     "test": "jest",
+    "create-super-admin": "ts-node src/scripts/createSuperAdmin.ts",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [

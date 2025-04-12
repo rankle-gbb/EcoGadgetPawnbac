@@ -4,7 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import { validate } from '../middlewares/validation';
 import { UpdateUserData } from '../types';
 import { maskMobile } from '../utils/maskUtils'; 
-import { registerSchema, loginSchema, updateUserSchema, changePasswordSchema } from '../utils/validationSchemas';
+import { registerSchema, loginSchema, updateUserSchema, changePasswordSchema, resetPasswordSchema } from '../utils/validationSchemas';
 import type { AnyExpression } from 'mongoose'
 
 /**
@@ -511,4 +511,78 @@ export const changePassword = async (ctx: Context): Promise<void> => {
     };
   }
 }
+
+/**
+ * 超级管理员重置管理员密码
+ * @param ctx Koa 上下文对象
+ */
+export const resetAdminPassword = async (ctx: Context): Promise<void> => {
+  try {
+    const { id } = ctx.params;
+    // Explicitly type or cast ctx.request.body
+        const { newPassword, confirmPassword, reason } = ctx.request.body as { newPassword: string; confirmPassword: string; reason?: string };
+
+    // 验证密码
+    if (newPassword !== confirmPassword) {
+      throw new AppError('两次输入的密码不一致', 400);
+    }
+
+    // 验证密码强度
+    const passwordValidation = await resetPasswordSchema.validateAsync(
+      { newPassword },
+      { abortEarly: false }
+    );
+
+    await userService.resetAdminPassword(
+      id,
+      passwordValidation.newPassword,
+      ctx.state.user,
+      ctx
+    );
+
+    ctx.status = 200;
+    ctx.body = {
+      code: 200,
+      message: '管理员密码重置成功'
+    };
+  } catch (error: AnyExpression) {
+    console.error('Reset admin password error:', {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      adminId: ctx.params.id,
+      operatorId: ctx.state.user?.id
+    });
+
+    if (error instanceof AppError) {
+      ctx.status = error.status;
+      ctx.body = {
+        code: error.status,
+        message: error.message
+      };
+      return;
+    }
+
+    if (error.isJoi) {
+      ctx.status = 400;
+      ctx.body = {
+        code: 400,
+        message: '密码格式不正确',
+        errors: error.details.map((detail: any) => ({
+          field: detail.path.join('.'),
+          message: detail.message
+        }))
+      };
+      return;
+    }
+
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '重置密码失败'
+    };
+  }
+};
 

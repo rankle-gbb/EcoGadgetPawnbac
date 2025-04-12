@@ -125,3 +125,17 @@ export const changePasswordSchema = Joi.object({
       'any.required': '确认密码不能为空'
     })
 });
+
+export const resetPasswordSchema = Joi.object({
+  newPassword: Joi.string()
+    .required()
+    .min(8)
+    .max(30)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/)
+    .messages({
+      'string.pattern.base': '密码必须包含大小写字母、数字和特殊字符',
+      'string.min': '密码长度不能小于8位',
+      'string.max': '密码长度不能超过30位',
+      'any.required': '新密码不能为空'
+    })
+});

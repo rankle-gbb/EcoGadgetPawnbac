@@ -296,3 +296,84 @@ export const changePassword = async (userId: string, oldPassword: string, newPas
   
   }
 }
+
+
+import { AuditLog } from '../models/AuditLog';
+import { AppContext } from '../types';
+import type { AnyExpression } from 'mongoose'
+
+export const resetAdminPassword = async (
+  adminId: string,
+  newPassword: string,
+  superAdmin: IUser,
+  ctx: AppContext
+): Promise<void> => {
+  try {
+    // 验证超管权限
+    if (!superAdmin.isSuperAdmin || superAdmin.role !== 'superAdmin') {
+      throw new AppError('需要超级管理员权限', 403);
+    }
+
+    // 查找目标管理员
+    const adminUser = await User.findById(adminId);
+    if (!adminUser) {
+      throw new AppError('管理员用户不存在', 404);
+    }
+
+    // 验证目标用户是否为管理员
+    if (!adminUser.isAdmin || adminUser.role !== 'admin') {
+      throw new AppError('只能重置管理员密码', 400);
+    }
+
+    // 不允许重置超管密码
+    if (adminUser.isSuperAdmin) {
+      throw new AppError('不能重置超级管理员密码', 403);
+    }
+
+    // 加密新密码
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // 更新密码
+    await User.findByIdAndUpdate(adminId, { 
+      password: hashedPassword,
+      updatedAt: new Date()
+    });
+
+    // 记录审计日志
+    await AuditLog.create({
+      operationType: 'admin',
+      operatorId: superAdmin._id,
+      operatorRole: superAdmin.role,
+      targetId: adminId,
+      targetType: 'user',
+      action: 'reset_password',
+      ipAddress: ctx.ip,
+      userAgent: ctx.headers['user-agent'] || 'unknown',
+      details: {
+        targetUsername: adminUser.username,
+        reason: (ctx.request.body as { reason?: string }).reason || '超管重置密码'
+      },
+      status: 'success'
+    });
+
+  } catch (error: AnyExpression) {
+    // 记录失败的审计日志
+    await AuditLog.create({
+      operationType: 'admin',
+      operatorId: superAdmin._id,
+      operatorRole: superAdmin.role,
+      targetId: adminId,
+      targetType: 'user',
+      action: 'reset_password',
+      ipAddress: ctx.ip,
+      userAgent: ctx.headers['user-agent'] || 'unknown',
+      details: {
+        error: error.message
+      },
+      status: 'failure'
+    });
+
+    throw error;
+  }
+};
