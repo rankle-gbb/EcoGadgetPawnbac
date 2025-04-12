@@ -6,6 +6,7 @@ export interface AppContext extends Context {
     id: string;
     username: string;
     role: string;
+    isSuperAdmin?: boolean;
   };
 }
 

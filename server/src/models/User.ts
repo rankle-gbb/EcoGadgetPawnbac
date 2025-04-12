@@ -10,7 +10,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   isAdmin: boolean;
-  role: 'user' | 'admin';
+  isSuperAdmin: boolean;
+  role: 'user' | 'admin' | 'superAdmin';
   createdAt: Date;
   updatedAt: Date;
   validatePassword(password: string): Promise<boolean>;
@@ -53,9 +54,13 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    isSuperAdmin: {
+      type: Boolean,
+      default: false,
+    },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'admin', 'superAdmin'],
       default: 'user',
     },
   },

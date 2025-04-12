@@ -68,3 +68,16 @@ export const requireLoginToken = async (ctx: AppContext, next: Next): Promise<vo
 
   await next();
 };
+
+// 超管权限验证中间件
+export const requireSuperAdmin = async (ctx: AppContext, next: Next): Promise<void> => {
+  if (!ctx.user) {
+    throw new AppError('未登录或登录已过期', 401);
+  }
+
+  if (!ctx.user.isSuperAdmin || ctx.user.role !== 'superAdmin') {
+    throw new AppError('需要超级管理员权限', 403);
+  }
+
+  await next();
+};
