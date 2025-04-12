@@ -1,19 +1,13 @@
 import Router from 'koa-router';
-import * as authController from '../controllers/authController';
-import { validate } from '../middlewares/validation';
-import { registerSchema } from '../utils/validationSchemas';
+import { AuthController } from '../controllers/authController';
+import { extractUser } from '../middlewares/auth';
 
 const router = new Router({
-  prefix: '/api/auth',
+  prefix: '/api/auth'
 });
 
-// Register a new user
-router.post('/register', authController.register);
-
-// Login user
-router.post('/login', authController.login);
-
-// Get current user
-// router.get('/me', authController.getCurrentUser);
+// Token相关路由
+router.post('/refresh-token', AuthController.refreshToken);
+router.post('/logout', extractUser, AuthController.logout);
 
 export default router;

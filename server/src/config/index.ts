@@ -10,18 +10,18 @@ const config = {
     port: process.env.PORT || 3000,
     env: process.env.NODE_ENV || 'development',
   },
-  
+
   // MongoDB configuration
   database: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/eco_gadget_recycle',
+    uri: process.env.MONGO_URI || 'mongodb://localhost:27017/eco_gadget_recycle',
   },
-  
+
   // JWT configuration
   jwt: {
     secret: process.env.JWT_SECRET || 'default_jwt_secret_key',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
-  
+
   // File upload configuration
   upload: {
     directory: process.env.UPLOAD_DIR || 'uploads',

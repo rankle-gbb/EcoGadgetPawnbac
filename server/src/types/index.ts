@@ -39,3 +39,10 @@ export interface PaginationResult<T> {
   limit: number;
   pages: number;
 }
+
+export interface UpdateUserData {
+  email?: string;
+  mobile?: string;
+  nickname?: string;
+  isAdmin?: boolean;
+}

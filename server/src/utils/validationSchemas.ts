@@ -1,12 +1,5 @@
 import Joi from 'joi';
 
-// User registration schema
-// export const registerSchema = Joi.object({
-//   username: Joi.string().min(3).max(30).required(),
-//   email: Joi.string().email().required(),
-//   password: Joi.string().min(6).required(),
-// });
-
 export const registerSchema = Joi.object({
   username: Joi.string()
     .max(30)
@@ -70,8 +63,31 @@ export const loginSchema = Joi.object({
     }),
 
 })
-// User login schema
-// export const loginSchema = Joi.object({
-//   username: Joi.string().required(),
-//   password: Joi.string().required(),
-// });
+
+export const updateUserSchema = Joi.object({
+  email: Joi.string()
+  .email()
+  .messages({
+    'string.email': '邮箱格式不正确'
+  }),
+
+  mobile: Joi.string()
+  .pattern(/^(?:(?:\+|00)86)?1[3-9]\d{9}$/)
+  .messages({
+    'string.pattern.base': '手机号格式不正确'
+  }),
+
+  nickname: Joi.string()
+  .min(1)
+  .max(8)
+  .messages({
+    'string.max': '昵称不能超过8个字符'
+  }),
+
+  isAdmin: Joi.boolean()
+  .messages({
+    'boolean.base': 'isAdmin必须是布尔值'
+  })
+}).min(1).messages({
+  'object.min': '至少需要修改一个字段'
+});

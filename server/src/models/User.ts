@@ -1,20 +1,19 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 
 // User interface
 export interface IUser extends Document {
   username: string;
+  userId: string;
   nickname: string;
   mobile: string;
   email: string;
   password: string;
-  salt: string;
   isAdmin: boolean;
   role: 'user' | 'admin';
   createdAt: Date;
   updatedAt: Date;
-  setPassword(password: string): void;
-  validatePassword(password: string): boolean;
+  validatePassword(password: string): Promise<boolean>;
 }
 
 // User schema
@@ -25,13 +24,13 @@ const UserSchema = new Schema<IUser>(
       required: true,
       unique: true,
       trim: true,
-      maxlength: 30,
+      maxLength: 30,
     },
     nickname: {
       type: String,
       required: true,
       unique: true,
-      maxlength: 8,
+      maxLength: 8,
     },
     email: {
       type: String,
@@ -48,11 +47,11 @@ const UserSchema = new Schema<IUser>(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minLength: 6,
     },
-    salt: {
-      type: String,
-      required: false,
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,
@@ -65,20 +64,9 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Method to set password
-UserSchema.methods.setPassword = function (password: string): void {
-  this.salt = crypto.randomBytes(16).toString('hex');
-  this.password = crypto
-    .pbkdf2Sync(password, this.salt, 1000, 64, 'sha512')
-    .toString('hex');
-};
-
 // Method to validate password
-UserSchema.methods.validatePassword = function (password: string): boolean {
-  const hash = crypto
-    .pbkdf2Sync(password, this.salt, 1000, 64, 'sha512')
-    .toString('hex');
-  return this.password === hash;
+UserSchema.methods.validatePassword = async function(password: string): Promise<boolean> {
+  return await bcrypt.compare(password, this.password);
 };
 
 // Create and export User model

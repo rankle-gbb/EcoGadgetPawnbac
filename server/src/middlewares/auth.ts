@@ -11,6 +11,8 @@ export const jwtMiddleware = jwt({
   path: [
     /^\/api\/auth\/login/,
     /^\/api\/auth\/register/,
+    /^\/api\/users\/register/,
+    /^\/api\/users\/login/,
     /^\/api\/health/,
     /^\/api\/docs/,
   ],
@@ -22,11 +24,11 @@ export const authorize = (roles: string[]) => {
     if (!ctx.user) {
       throw new AppError('Unauthorized - No user found', 401);
     }
-    
+
     if (!roles.includes(ctx.user.role)) {
       throw new AppError('Forbidden - Insufficient permissions', 403);
     }
-    
+
     await next();
   };
 };
@@ -35,11 +37,11 @@ export const authorize = (roles: string[]) => {
 /**
  * 提取用户信息的中间件函数
  * 从 ctx.state.user 中获取用户信息并存储到 ctx.user 中
- * 
+ *
  * @param ctx - Koa 应用上下文对象
  * @param next - 下一个中间件函数
  * @returns Promise<void>
- * 
+ *
  * @example
  * app.use(extractUser);
  */
@@ -51,6 +53,6 @@ export const extractUser = async (ctx: AppContext, next: Next): Promise<void> =>
       role: ctx.state.user.role,
     };
   }
-  
+
   await next();
 };

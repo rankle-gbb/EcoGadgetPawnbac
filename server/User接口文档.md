@@ -66,12 +66,30 @@ Content-Type: application/json
 ```
 
 #### 3. 用户资料管理
-##### 3.1 获取当前用户资料
-```http
-GET /api/users/profile
-Authorization: Bearer <token>
 
-响应示例：
+##### 3.1 获取当前用户资料
+
+**接口说明**：获取当前登录用户的详细信息，包括用户名、昵称、邮箱、手机号（脱敏）、角色等。
+
+**请求方法**：GET
+
+**请求URL**：`/api/users/profile`
+
+**请求头**：
+```
+Authorization: Bearer <token>
+```
+
+**请求参数**：无（用户信息从 JWT token 中获取）
+
+**响应状态码**：
+- `200 OK`：请求成功
+- `401 Unauthorized`：未登录或登录已过期
+- `404 Not Found`：用户不存在
+- `500 Internal Server Error`：服务器内部错误
+
+**成功响应示例**：
+```json
 {
   "code": 200,
   "data": {
@@ -85,6 +103,37 @@ Authorization: Bearer <token>
   }
 }
 ```
+
+**错误响应示例**：
+
+1. 未登录或登录已过期：
+```json
+{
+  "code": 401,
+  "message": "未登录或登录已过期"
+}
+```
+
+2. 用户不存在：
+```json
+{
+  "code": 404,
+  "message": "用户不存在"
+}
+```
+
+3. 服务器内部错误：
+```json
+{
+  "code": 500,
+  "message": "获取用户信息失败"
+}
+```
+
+**安全性说明**：
+- 此接口需要用户登录后才能访问
+- 返回的手机号会进行脱敏处理，中间四位数字使用星号代替
+- 只能获取当前登录用户的信息，不能获取其他用户的信息
 
 ##### 3.2 修改用户信息
 ```http
@@ -188,7 +237,7 @@ Authorization: Bearer <admin_token>
    ```javascript
    // 手机号脱敏
    const maskMobile = mobile => mobile.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2")
-   
+
    // 邮箱脱敏
    const maskEmail = email => email.replace(/(.).+@(.+)/, "$1***@$2")
    、、、
