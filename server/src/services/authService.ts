@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Secret } from 'jsonwebtoken';
+import { Secret, SignOptions } from 'jsonwebtoken';
 import config from '../config';
 import { AppError } from '../middlewares/errorHandler';
 
@@ -7,6 +7,7 @@ export interface TokenPayload {
   userId: string;
   username: string;
   role: string;
+  tokenType: 'register' | 'login';  // 添加 token 类型
 }
 
 export class AuthService {
@@ -20,7 +21,7 @@ export class AuthService {
       { 
         expiresIn: config.jwt.expiresIn,
         algorithm: 'HS256'
-      }
+      } as SignOptions
     );
   }
 
@@ -43,7 +44,8 @@ export class AuthService {
     return this.generateToken({
       userId: decoded.userId,
       username: decoded.username,
-      role: decoded.role
+      role: decoded.role,
+      tokenType: 'login'  // 刷新后的token应该是登录token
     });
   }
 

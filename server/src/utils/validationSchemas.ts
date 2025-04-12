@@ -91,3 +91,37 @@ export const updateUserSchema = Joi.object({
 }).min(1).messages({
   'object.min': '至少需要修改一个字段'
 });
+
+export const changePasswordSchema = Joi.object({
+  oldPassword: Joi.string()
+    .required()
+    .min(6)
+    .max(30)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,30}$/)
+    .messages({
+      'string.pattern.base': '密码必须包含大小写字母、数字和特殊字符',
+      'string.min': '密码长度不能小于6位',
+      'string.max': '密码长度不能超过30位',
+      'any.required': '原密码不能为空'
+    }),
+  newPassword: Joi.string()
+    .required()
+    .min(6)
+    .max(30)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,30}$/)
+    .invalid(Joi.ref('oldPassword'))
+    .messages({
+      'string.pattern.base': '密码必须包含大小写字母、数字和特殊字符',
+      'string.min': '密码长度不能小于6位',
+      'string.max': '密码长度不能超过30位',
+      'any.required': '新密码不能为空',
+      'any.invalid': '新密码不能与原密码相同'
+    }),
+  confirmPassword: Joi.string()
+    .required()
+    .valid(Joi.ref('newPassword'))
+    .messages({
+      'any.only': '确认密码与新密码不匹配',
+      'any.required': '确认密码不能为空'
+    })
+});

@@ -56,3 +56,15 @@ export const extractUser = async (ctx: AppContext, next: Next): Promise<void> =>
 
   await next();
 };
+
+export const requireLoginToken = async (ctx: AppContext, next: Next): Promise<void> => {
+  if (!ctx.state.user) {
+    throw new AppError('未登录或登录已过期', 401);
+  }
+
+  if (ctx.state.user.tokenType !== 'login') {
+    throw new AppError('需要登录后才能访问', 401);
+  }
+
+  await next();
+};

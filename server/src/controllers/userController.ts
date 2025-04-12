@@ -4,7 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import { validate } from '../middlewares/validation';
 import { UpdateUserData } from '../types';
 import { maskMobile } from '../utils/maskUtils'; 
-import { registerSchema, loginSchema, updateUserSchema } from '../utils/validationSchemas';
+import { registerSchema, loginSchema, updateUserSchema, changePasswordSchema } from '../utils/validationSchemas';
 import type { AnyExpression } from 'mongoose'
 
 /**
@@ -239,7 +239,7 @@ export const getUserProfile = async (ctx: Context): Promise<void> => {
       ctx.status = 401;
       ctx.body = {
         code: 401,
-        message: '未登录或登录已过期'
+        message: '未获取到用户ID'
       };
       return;
     }
@@ -315,16 +315,6 @@ export const getUserProfile = async (ctx: Context): Promise<void> => {
 export const updateUserInfo = async (ctx: Context): Promise<void> => {
   try {
     const userId = ctx.params.id; 
-
-     // 确保用户已登录
-    if (!ctx.state.user) {
-      ctx.status = 401;
-      ctx.body = {
-        code: 401,
-        message: '未登录或登录已过期'
-      };
-      return;
-    }
 
     // 验证请求数据
     let updateData: UpdateUserData;
@@ -446,6 +436,78 @@ export const updateUserInfo = async (ctx: Context): Promise<void> => {
       code: 500,
       message: '修改用户信息失败',
       debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    };
+  }
+}
+
+/**
+ * 修改用户密码控制器
+ * @param ctx Koa 上下文对象
+ * @returns Promise<void>
+ */
+export const changePassword = async (ctx: Context): Promise<void> => {
+  
+  try {
+    // 验证请求数据
+    let validatedData;
+    try {
+      validatedData = await changePasswordSchema.validateAsync(
+        ctx.request.body,
+        {
+          abortEarly: false,
+          stripUnknown: true
+        }
+      );
+    } catch (validationError: any) {
+      ctx.status = 400;
+      ctx.body = {
+        code: 400,
+        message: '参数验证失败',
+        errors: validationError.details?.map((detail: any) => ({
+          field: detail.path.join('.'),
+          message: detail.message
+        }))
+      };
+      return;
+    }
+
+    // 调用service修改密码
+    await userService.changePassword(
+      ctx.state.user.id,
+      validatedData.oldPassword,
+      validatedData.newPassword
+    );
+
+    ctx.status = 200;
+    ctx.body = {
+      code: 200,
+      message: '密码修改成功'
+    };
+  } catch (error: AnyExpression) {
+    // 增强错误日志
+    console.error('Change password error:', {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        status: error.status
+      },
+      userId: ctx.state.user?.userId
+    });
+    
+    if (error instanceof AppError) {
+      ctx.status = error.status;
+      ctx.body = {
+        code: error.status,
+        message: error.message
+      };
+      return;
+    }
+
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '密码修改失败'
     };
   }
 }

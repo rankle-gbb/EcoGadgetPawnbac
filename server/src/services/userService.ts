@@ -68,9 +68,9 @@ export const register = async (userData: {
     let token;
     try {
       token = jwt.sign(
-        { userId: user._id, role: user.role },
+        { userId: user._id, role: user.role, tokenType: 'register' },
         config.jwt.secret as string,
-        { expiresIn: '7d' }
+        { algorithm: 'HS256', expiresIn: '24h'}  // 注册 token 有效期设置短一些 
       );
     } catch (jwtError) {
       console.error('JWT generation error:', jwtError);
@@ -124,7 +124,8 @@ export const login = async (
     {
       userId: user._id,
       username: user.username,
-      role: user.role
+      role: user.role,
+      tokenType: 'login'  // 登录 token
     },
     config.jwt.secret as string,
     {
@@ -247,5 +248,51 @@ export const updateUser = async (userId: string,
       throw new AppError('无效的用户ID', 400);
     }
     throw error;
+  }
+}
+
+/**
+ * 修改用户密码
+ * @param userId 用户ID
+ * @param oldPassword 原密码
+ * @param newPassword 新密码
+ */
+export const changePassword = async (userId: string, oldPassword: string, newPassword: string): Promise<void> => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new AppError('用户不存在', 404);
+    }
+
+    // 验证原密码
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password);
+    if (!isValidPassword) {
+      throw new AppError('原密码不正确', 401);
+    }
+
+    // 加密新密码
+    const saltRounds = 10;
+    let hashedPassword;
+    try {
+      hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    } catch (hashError) {
+      console.error('Password hashing error:', hashError);
+      throw new Error('密码加密失败');
+    }
+
+    // 更新密码
+    await User.findByIdAndUpdate(userId, { 
+      password: hashedPassword,
+      updatedAt: new Date()
+    });
+
+  } catch (error) {
+     if (error instanceof AppError) {
+      throw error;
+    }
+    console.error('Password change error:', error);
+    throw new AppError('密码修改失败', 500);
+  
   }
 }
